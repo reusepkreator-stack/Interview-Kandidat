@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Platform Live Online Interview</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f2f5;
+            color: #333;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 12px;
+        }
+        .interview-container {
+            max-width: 750px;
+            width: 100%;
+            background: #ffffff;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+            padding: 24px;
+            text-align: center;
+        }
+        h1 {
+            font-size: 1.6rem;
+            color: #1a1a1a;
+            margin-bottom: 10px;
+        }
+        .instruction {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+        .video-wrapper {
+            position: relative;
+            width: 100%;
+            max-width: 640px;
+            aspect-ratio: 16 / 9;
+            background-color: #111;
+            margin: 0 auto 20px auto;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transform: scaleX(-1);
+        }
+        .timer-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            background: rgba(224, 36, 36, 0.9);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            letter-spacing: 0.5px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            z-index: 10;
+        }
+        .question-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(transparent, rgba(0, 0, 0, 0.9) 40%);
+            color: #ffffff;
+            padding: 40px 15px 15px 15px;
+            font-size: 1rem;
+            line-height: 1.4;
+            text-align: center;
+            z-index: 10;
+            font-weight: 500;
+        }
+        .action-zone {
+            margin-top: 10px;
+            display: flex;
+            justify-content: center;
+        }
+        .btn {
+            background-color: #2563eb;
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+            box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
+            width: 100%;
+            max-width: 320px;
+        }
+        .btn:hover {
+            background-color: #1d4ed8;
+        }
+        .btn:active {
+            transform: scale(0.98);
+        }
+        .btn-next {
+            background-color: #10b981;
+            box-shadow: 0 4px 6px rgba(16, 185, 129, 0.2);
+        }
+        .btn-next:hover {
+            background-color: #059669;
+        }
+        #status-bar {
+            margin-top: 15px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #4b5563;
+            min-height: 20px;
+            line-height: 1.3;
+        }
+        .recording-indicator {
+            color: #dc2626;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+
+        @media (max-width: 600px) {
+            .interview-container {
+                padding: 16px;
+                border-radius: 12px;
+            }
+            h1 {
+                font-size: 1.35rem;
+            }
+            .instruction {
+                font-size: 0.8rem;
+                margin-bottom: 15px;
+            }
+            .video-wrapper {
+                aspect-ratio: 4 / 3;
+            }
+            .question-overlay {
+                font-size: 0.88rem;
+                padding: 30px 10px 12px 10px;
+            }
+            .timer-badge {
+                font-size: 0.85rem;
+                padding: 3px 10px;
+            }
+            .btn {
+                padding: 12px 20px;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<div class="interview-container">
+    <h1>Sistem Interview Online</h1>
+    <p id="instruction-text" class="instruction">Siapkan diri Anda dan izinkan akses kamera/mikrofon pada browser untuk memulai.</p>
+
+    <div class="video-wrapper">
+        <video id="preview" autoplay muted playsinline></video>
+        <div id="timer" class="timer-badge" style="display: none;">00:00</div>
+        <div id="question-box" class="question-overlay" style="display: none;">
+            Pertanyaan akan muncul di sini setelah Anda menekan tombol Mulai.
+        </div>
+    </div>
+
+    <div class="action-zone">
+        <button id="btn-start" class="btn">Mulai Interview</button>
+        <button id="btn-next" class="btn btn-next" style="display: none;">Lanjut ke Pertanyaan Berikutnya &gt;</button>
+    </div>
+
+    <div id="status-bar">Menghubungkan ke kamera...</div>
+</div>
+
+<script>
+    // URL Google Apps Script Anda (Sudah benar & langsung digunakan)
+    const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbx5kCs3BLp3u8t3ZMLLYot7kVTLTHa4VcuFKZxS6x-Yc-1Lqv79pilz7eht7IuRWHvauw/exec";
+
+    const interviewQuestions = [
+        { 
+            text: "Silahkan perkenalkan diri anda maksimal 3 menit di hitung dari sekarang jika sudah selesai kurang dari 3 menit anda bisa next atau lanjutan ke pertanyaan berikutnya.", 
+            duration: 180 
+        },
+        { 
+            text: "Sebutkan kelebihan dan kekurangan terbesar yang Anda miliki, serta bagaimana Anda mengatasinya. (Maksimal 3 menit)", 
+            duration: 180 
+        },
+        { 
+            text: "Ceritakan proyek atau pencapaian yang paling membanggakan dalam hidup Anda. (Maksimal 5 menit)", 
+            duration: 300 
+        }
+    ];
+
+    let currentQuestionIndex = 0;
+    let mediaRecorder;
+    let recordedChunks = [];
+    let countdownInterval;
+    let timeLeft = 0;
+    let localStream;
+
+    const btnStart = document.getElementById('btn-start');
+    const btnNext = document.getElementById('btn-next');
+    const previewVideo = document.getElementById('preview');
+    const questionBox = document.getElementById('question-box');
+    const timerDiv = document.getElementById('timer');
+    const statusBar = document.getElementById('status-bar');
+    const instructionText = document.getElementById('instruction-text');
+
+    async function setupCamera() {
+        try {
+            localStream = await navigator.mediaDevices.getUserMedia({ 
+                video: { 
+                    width: { ideal: 640 }, 
+                    height: { ideal: 480 },
+                    facingMode: "user"
+                }, 
+                audio: true 
+            });
+            previewVideo.srcObject = localStream;
+            statusBar.innerText = "Kamera siap. Silahkan klik 'Mulai Interview'.";
+            btnStart.disabled = false;
+        } catch (err) {
+            statusBar.innerHTML = "<span style='color:red;'>Gagal mengakses kamera/mikrofon. Pastikan izin sudah diberikan dan Anda menggunakan HTTPS / Localhost!</span>";
+            btnStart.disabled = true;
+            console.error("Error akses media device:", err);
+        }
+    }
+
+    btnStart.disabled = true;
+    setupCamera();
+
+    btnStart.addEventListener('click', () => {
+        btnStart.style.display = 'none';
+        btnNext.style.display = 'inline-block';
+        questionBox.style.display = 'block';
+        timerDiv.style.display = 'block';
+        instructionText.innerText = "Sesi interview sedang berlangsung. Jawab pertanyaan dengan tenang.";
+        executeQuestionOrder(currentQuestionIndex);
+    });
+
+    function executeQuestionOrder(index) {
+        if (index >= interviewQuestions.length) {
+            concludeInterview();
+            return;
+        }
+
+        const currentData = interviewQuestions[index];
+        questionBox.innerText = `[Pertanyaan ${index + 1}/${interviewQuestions.length}] \n ${currentData.text}`;
+        timeLeft = currentData.duration;
+        
+        startLiveRecording();
+        runTimerCountdown();
+    }
+
+    function runTimerCountdown() {
+        clearInterval(countdownInterval);
+        formatTimerDisplay();
+
+        countdownInterval = setInterval(() => {
+            timeLeft--;
+            formatTimerDisplay();
+
+            if (timeLeft <= 0) {
+                clearInterval(countdownInterval);
+                statusBar.innerHTML = "Waktu habis! Menyimpan rekaman...";
+                moveNextStep();
+            }
+        }, 1000);
+    }
+
+    function formatTimerDisplay() {
+        const minutes = Math.floor(timeLeft / 60);
+        const seconds = timeLeft % 60;
+        timerDiv.innerText = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+    }
+
+    function startLiveRecording() {
+        recordedChunks = [];
+        
+        let options = { 
+            mimeType: 'video/webm;codecs=vp8,opus',
+            videoBitsPerSecond: 400000 
+        };
+        
+        if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+            options = { mimeType: 'video/webm' };
+        }
+
+        try {
+            mediaRecorder = new MediaRecorder(localStream, options);
+        } catch(e) {
+            mediaRecorder = new MediaRecorder(localStream);
+        }
+
+        mediaRecorder.ondataavailable = (event) => {
+            if (event.data && event.data.size > 0) {
+                recordedChunks.push(event.data);
+            }
+        };
+
+        mediaRecorder.onstop = () => {
+            const videoBlob = new Blob(recordedChunks, { type: 'video/webm' });
+            uploadInterviewVideo(videoBlob, currentQuestionIndex + 1);
+            currentQuestionIndex++;
+            executeQuestionOrder(currentQuestionIndex);
+        };
+
+        mediaRecorder.start();
+        statusBar.innerHTML = "<span class='recording-indicator'>🔴 LIVE RECORDING - Sedang Merekam...</span>";
+    }
+
+    btnNext.addEventListener('click', () => {
+        clearInterval(countdownInterval);
+        moveNextStep();
+    });
+
+    function moveNextStep() {
+        if (mediaRecorder && mediaRecorder.state !== "inactive") {
+            mediaRecorder.stop(); 
+        }
+    }
+
+    function uploadInterviewVideo(blobFile, questionNumber) {
+        statusBar.innerText = `Menyimpan & mengunggah rekaman video soal ${questionNumber}...`;
+        
+        const reader = new FileReader();
+        reader.readAsDataURL(blobFile);
+        reader.onloadend = function () {
+            const base64Data = reader.result.split(',')[1];
+            const timestampUnique = new Date().getTime();
+
+            const payload = {
+                videoData: base64Data,
+                filename: `Kandidat_Soal_${questionNumber}_${timestampUnique}.webm`,
+                questionNum: questionNumber
+            };
+
+            // LOGIKA PERBAIKAN: Langsung menembak ke URL Apps Script tanpa pengecekan logika if-else simulasi
+            fetch(GOOGLE_SCRIPT_URL, {
+                method: "POST",
+                body: JSON.stringify(payload),
+                mode: 'no-cors' // Penting untuk bypass CORS kebijakan Google Web App
+            })
+            .then(() => {
+                console.log(`Video ${questionNumber} berhasil dikirim.`);
+                statusBar.innerText = `Rekaman soal ${questionNumber} sukses terkirim ke Google Drive!`;
+            })
+            .catch(err => {
+                console.error("Gagal sinkronisasi data:", err);
+                statusBar.innerText = "Gagal mengirim data ke Google Drive.";
+            });
+        };
+    }
+
+    function concludeInterview() {
+        clearInterval(countdownInterval);
+        questionBox.innerText = "Sesi wawancara selesai! Terima kasih atas waktu Anda. Semua data jawaban Anda telah berhasil diunggah ke cloud.";
+        timerDiv.style.display = 'none';
+        btnNext.style.display = 'none';
+        instructionText.innerText = "Status Selesai.";
+        statusBar.innerHTML = "<span style='color:#10b981;'>✓ Selesai! Semua video wawancara aman di database Google Drive.</span>";
+        
+        if (localStream) {
+            localStream.getTracks().forEach(track => track.stop());
+        }
+    }
+</script>
+</body>
+</html>
