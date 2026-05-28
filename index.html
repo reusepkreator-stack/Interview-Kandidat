@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Platform Live Online Interview</title>
+    <title>Platform Live Online Submit Video</title>
     <style>
         * {
             box-sizing: border-box;
@@ -168,7 +168,7 @@
 <body>
 
 <div class="interview-container">
-    <h1>Sistem Interview Online</h1>
+    <h1>Sistem Submit Video Resume</h1>
     <p id="instruction-text" class="instruction">Siapkan diri Anda dan izinkan akses kamera/mikrofon pada browser untuk memulai.</p>
 
     <div class="video-wrapper">
@@ -180,7 +180,7 @@
     </div>
 
     <div class="action-zone">
-        <button id="btn-start" class="btn">Mulai Interview</button>
+        <button id="btn-start" class="btn">Mulai Membuat Video Resume</button>
         <button id="btn-next" class="btn btn-next" style="display: none;">Lanjut ke Pertanyaan Berikutnya &gt;</button>
     </div>
 
@@ -232,7 +232,7 @@
                 audio: true 
             });
             previewVideo.srcObject = localStream;
-            statusBar.innerText = "Kamera siap. Silahkan klik 'Mulai Interview'.";
+            statusBar.innerText = "Kamera siap. Silahkan klik 'Mulai Video Resume'.";
             btnStart.disabled = false;
         } catch (err) {
             statusBar.innerHTML = "<span style='color:red;'>Gagal mengakses kamera/mikrofon. Pastikan izin sudah diberikan dan Anda menggunakan HTTPS / Localhost!</span>";
